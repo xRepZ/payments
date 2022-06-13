@@ -8,12 +8,17 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 
 	logger "github.com/sirupsen/logrus"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/xRepZ/payments/cmd/config"
 
-	"github.com/go-chi/chi/v5"
+	api "github.com/xRepZ/payments/internal/http"
+	postgres "github.com/xRepZ/payments/internal/storage"
 )
 
 func main() {
@@ -38,20 +43,21 @@ func main() {
 		}
 	}()
 
-	// db, err := sqlx.Connect("postgres", cfg.Storage.Postgres.Dsn)
-	// if err != nil {
-	// 	log.WithError(err).Fatal("can't connect to postgres")
-	// }
+	db, err := sqlx.Connect("postgres", cfg.Storage.Postgres.Dsn)
+	if err != nil {
+		log.WithError(err).Fatal("can't connect to postgres")
+	}
+
+	storage := postgres.NewTransaction(db)
+
+	server := api.NewServer(storage)
 
 	// Объявляем handlers
 	router := chi.NewRouter()
 	router.Group(func(r chi.Router) {
-		r.Get("/api", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("welcome anonymous"))
-		})
 		// Вызывается пользователем
-		// r.Post("/api/transaction",) // Создание платежа
-		// r.Get("/api/transaction/{transaction_id}",) // Проверка статуса платежа по id
+		// r.Post("/api/transaction", server.AddTransaction) // Создание платежа
+		r.Get("/api/transaction/{transaction_id}", server.GetById) // Проверка статуса платежа по id
 		// r.Get("/api/transaction/user/{user_id}", ) // Все платежи юзера по его id
 		// r.Get("/api/transaction/user/{user_email}", ) // Все платежи юзера по его email
 		// r.Delete("/api/transaction/{transaction_id}", ) // Отмена платежа по его id
@@ -63,7 +69,7 @@ func main() {
 
 	wg.Add(1)
 	osSigCh := make(chan os.Signal, 1)
-	signal.Notify(osSigCh, os.Interrupt, os.Kill)
+	signal.Notify(osSigCh, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		defer wg.Done()
 
