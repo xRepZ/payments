@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:12
+    ports:
+      - 5432:5432
+    volumes:
+      - ../compose_test/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=payments
+      - POSTGRES_USER=payments
+      - POSTGRES_PASSWORD=123321
+  app:
+    build:
+      context: ./
+    ports:
+      - 8080:8080
+      
+  

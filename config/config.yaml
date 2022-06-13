@@ -1,0 +1,8 @@
+server:
+  http:
+    listen: :8080
+
+storage:
+  postgres:
+    dsn: "host=localhost port=5432 user=payments password=123321 dbname=payments sslmode=disable"
+
