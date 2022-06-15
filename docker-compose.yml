@@ -6,7 +6,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ../compose_test/db:/var/lib/postgresql/data
+      - /tmp/compose_test/db:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=payments
       - POSTGRES_USER=payments

@@ -41,7 +41,9 @@ func (t *Transaction) AddTransaction(ctx context.Context, userId int, email stri
 
 func (t *Transaction) UpdateById(ctx context.Context, id int, status string) error {
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
 	sql, args, err := psql.Update("transactions").Where("id = ?", id).Set("status", status).ToSql()
+
 	if err != nil {
 		return fmt.Errorf("can't create query: %w", err)
 	}
@@ -57,6 +59,7 @@ func (t *Transaction) UpdateById(ctx context.Context, id int, status string) err
 
 func (t *Transaction) CancelById(ctx context.Context, id int) error {
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
 	sql, args, err := psql.Delete("*").
 		From("transactions").
 		Where("id = ?", id).
@@ -71,7 +74,6 @@ func (t *Transaction) CancelById(ctx context.Context, id int) error {
 	if err != nil {
 		return fmt.Errorf("can't do db query: %w", err)
 	}
-	fmt.Println("ok")
 	return nil
 
 }
@@ -164,5 +166,3 @@ func (t *Transaction) GetById(ctx context.Context, id int) (string, error) {
 
 	return status, nil
 }
-
-// func (t *Transaction) GetByUserEmail(ctx context.Context, email string) ([]*internal.Transactions, error)
