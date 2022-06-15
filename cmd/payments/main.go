@@ -9,10 +9,12 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	logger "github.com/sirupsen/logrus"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/xRepZ/payments/cmd/config"
@@ -42,7 +44,8 @@ func main() {
 			cancel()
 		}
 	}()
-
+	// ждём базу из докер компоуза
+	time.Sleep(time.Second * 10)
 	db, err := sqlx.Connect("postgres", cfg.Storage.Postgres.Dsn)
 	if err != nil {
 		log.WithError(err).Fatal("can't connect to postgres")
@@ -54,15 +57,27 @@ func main() {
 
 	// Объявляем handlers
 	router := chi.NewRouter()
+
+	// Protected routes
 	router.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(api.TokenGenerator))
+		r.Use(jwtauth.Authenticator)
+
+		r.Patch("/api/transaction/{transaction_id}", server.UpdateById) // Изменение статуса платежа
+
+	})
+
+	// public
+	router.Group(func(r chi.Router) {
+		r.Get("/api/token", server.Login)
 		// Вызывается пользователем
-		// r.Post("/api/transaction", server.AddTransaction) // Создание платежа
-		r.Get("/api/transaction/{transaction_id}", server.GetById) // Проверка статуса платежа по id
-		// r.Get("/api/transaction/user/{user_id}", ) // Все платежи юзера по его id
-		// r.Get("/api/transaction/user/{user_email}", ) // Все платежи юзера по его email
-		// r.Delete("/api/transaction/{transaction_id}", ) // Отмена платежа по его id
+		r.Post("/api/transaction", server.AddTransaction)                  // Создание платежа
+		r.Get("/api/transaction/{transaction_id}", server.GetById)         // Проверка статуса платежа по id
+		r.Get("/api/transaction/user/{user_id}", server.GetByUserId)       // Все платежи юзера по его id
+		r.Get("/api/transaction/user/mail/{user_email}", server.GetByMail) // Все платежи юзера по его email
+		r.Delete("/api/transaction/{transaction_id}", server.CancelById)   // Отмена платежа по его id
 		// Вызывается платежной системой
-		// r.With(AuthMiddleware).Patch("/api/transaction/{transaction_id}", ) // Изменение статуса платежа
+		//r.With(AuthMiddleware).Patch("/api/transaction/{transaction_id}", ) // Изменение статуса платежа
 	})
 
 	wg := sync.WaitGroup{}

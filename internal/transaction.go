@@ -20,10 +20,10 @@ type Transactions struct {
 }
 
 type TransactionStorage interface {
-	// Add(ctx context.Context, userId int, email string, amount float64, currency string) error
-	// Cancel(ctx context.Context, id int) error
-	// Update(ctx context.Context, id int, status string) error
+	AddTransaction(ctx context.Context, userId int, email string, amount float64, currency string) error
+	CancelById(ctx context.Context, id int) error
+	UpdateById(ctx context.Context, id int, status string) error
 	GetById(ctx context.Context, id int) (string, error)
-	// GetByUserId(ctx context.Context, userId int) ([]*Transactions, error)
-	// GetByUserEmail(ctx context.Context, email string) ([]*Transactions, error)
+	GetByUserId(ctx context.Context, userId int) ([]*Transactions, error)
+	GetByMail(ctx context.Context, email string) ([]*Transactions, error)
 }
