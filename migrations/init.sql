@@ -1,3 +1,5 @@
+CREATE USER payments WITH PASSWORD '123321';
+
 CREATE TABLE status_types(
     id varchar(15)  PRIMARY KEY,
     description     TEXT
