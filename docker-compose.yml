@@ -11,10 +11,16 @@ services:
       - POSTGRES_DB=payments
       - POSTGRES_USER=payments
       - POSTGRES_PASSWORD=123321
+
   app:
     build:
       context: ./
     ports:
       - 8080:8080
-      
-  
+    depends_on:
+      - "db"
+    restart: on-failure
+
+networks:
+  default:
+    name: payments-network
